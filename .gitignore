@@ -1,0 +1,30 @@
+# Secrets: keys must never enter the repo
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Local working notes
+CLAUDE.md
+
+# Database and collected data
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Editor / operating system
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
