@@ -3,6 +3,21 @@
 from typing import Any
 
 
+def parse_match(match: dict[str, Any]) -> tuple[str, int, float, int, int, str]:
+    """Return the values for one row of the matches table."""
+    metadata = match["metadata"]
+    info = match["info"]
+
+    match_id = metadata["match_id"]
+    game_datetime = info["game_datetime"]
+    game_length = info["game_length"]
+    set_number = info["tft_set_number"]
+    queue_id = info["queue_id"]
+    game_version = info["game_version"]
+
+    return match_id, game_datetime, game_length, set_number, queue_id, game_version
+
+
 def parse_participant(player: dict[str, Any]) -> tuple[int, int]:
     """Return a player's placement and level."""
     placement = player["placement"]
