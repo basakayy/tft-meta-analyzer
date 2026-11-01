@@ -25,3 +25,8 @@ def parse_trait(trait: dict[str, Any]) -> tuple[str, int, int, int]:
     style = trait["style"]
     tier_current = trait["tier_current"]
     return name, num_units, style, tier_current
+
+
+def parse_items(unit: dict[str, Any]) -> list[str]:
+    """Return the item names on a unit; units without items give an empty list."""
+    return unit.get("itemNames", [])
