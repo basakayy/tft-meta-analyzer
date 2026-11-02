@@ -41,6 +41,12 @@ def load_tank_ids(set_number: int) -> set[str]:
     return set(roles.loc[roles["role"].str.endswith("Tank"), "character_id"])
 
 
+def load_unit_slots(set_number: int) -> pd.Series:
+    """Return how many board slots each character id takes (Elder Dragon takes 2)."""
+    roles = pd.read_csv(ROLES_DIR / f"unit_roles_set{set_number}.csv")
+    return roles.set_index("character_id")["slots"]
+
+
 def find_carries(units: pd.DataFrame, tank_ids: set[str]) -> pd.Series:
     """Return each player's carry: a non-tank with the most items.
 
@@ -161,6 +167,24 @@ def summarize_comps(boards: pd.DataFrame) -> pd.DataFrame:
         top4_rate=("top4", "mean"),
         win_rate=("win", "mean"),
     )
+
+
+def find_typical_board(
+    units: pd.DataFrame, participant_ids: pd.Series, level: int, slots: pd.Series
+) -> list[str]:
+    """Return the most common units of the given boards that fit in `level` slots."""
+    board_units = units[units["participant_id"].isin(participant_ids)]
+    share = board_units.groupby("character_id")["participant_id"].nunique() / len(participant_ids)
+
+    board = []
+    used = 0  # slots filled so far
+    for unit in share.sort_values(ascending=False).index:
+        size = slots[unit]  # 1, or 2 for Elder Dragon
+        if used + size > level:
+            continue  # does not fit: skip it
+        board.append(unit)
+        used += size
+    return board
 
 
 def load_boards(repository: MatchRepository, set_number: int, queue_id: int) -> pd.DataFrame:
