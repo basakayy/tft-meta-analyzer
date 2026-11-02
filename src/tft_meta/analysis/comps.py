@@ -1,5 +1,7 @@
 """Groups players' final boards into comps named by main trait and carry."""
 
+from dataclasses import dataclass
+
 import pandas as pd
 
 from tft_meta.config import PROJECT_ROOT
@@ -23,6 +25,9 @@ MIN_CORE_UNITS = 4
 # A carry is named in the comp name if it carries at least this share of its boards
 NAME_SHARE = 0.3
 MAX_NAMED_CARRIES = 2
+# Fixed average placement limits, so a tier means the same thing in every patch
+TIER_LIMITS = [4.0, 4.4, 4.7]
+TIERS = ["S", "A", "B", "C"]
 
 
 def find_main_traits(traits: pd.DataFrame) -> pd.Series:
@@ -35,10 +40,31 @@ def find_main_traits(traits: pd.DataFrame) -> pd.Series:
     return main.set_index("participant_id")["name"].rename("main_trait")
 
 
-def load_tank_ids(set_number: int) -> set[str]:
-    """Return the character ids whose role is a tank in the given set."""
+@dataclass(frozen=True)
+class CarryRules:
+    """Hand-marked unit lists from the roles file that steer carry selection."""
+
+    # Never named as carry: tanks, and side carries that hold items but are not
+    # what the comp is built around
+    non_carry_ids: set[str]
+    # Top-cost units played as the main carry, so the top-cost rule skips them
+    top_cost_carry_ids: set[str]
+
+
+def load_carry_rules(set_number: int) -> CarryRules:
+    """Read the carry rules of the given set from its roles file."""
     roles = pd.read_csv(ROLES_DIR / f"unit_roles_set{set_number}.csv")
-    return set(roles.loc[roles["role"].str.endswith("Tank"), "character_id"])
+    non_carry = roles["role"].str.endswith("Tank") | (roles["side_carry"] == 1)
+    return CarryRules(
+        non_carry_ids=set(roles.loc[non_carry, "character_id"]),
+        top_cost_carry_ids=set(roles.loc[roles["top_cost_carry"] == 1, "character_id"]),
+    )
+
+
+def is_late_unit(units: pd.DataFrame, rules: CarryRules) -> pd.Series:
+    """True for top-cost units that usually arrive only at the end of the game."""
+    top_cost = units["rarity"] == units["rarity"].max()
+    return top_cost & ~units["character_id"].isin(rules.top_cost_carry_ids)
 
 
 def load_unit_slots(set_number: int) -> pd.Series:
@@ -47,19 +73,18 @@ def load_unit_slots(set_number: int) -> pd.Series:
     return roles.set_index("character_id")["slots"]
 
 
-def find_carries(units: pd.DataFrame, tank_ids: set[str]) -> pd.Series:
-    """Return each player's carry: a non-tank with the most items.
+def find_carries(units: pd.DataFrame, rules: CarryRules) -> pd.Series:
+    """Return each player's carry: the unit with the most items, skipping non-carries.
 
-    Ties first skip the most expensive units: the carry holds the items through
-    the game, while top-cost units usually arrive only at the end. Remaining
-    ties go to more stars, then the higher cost.
+    Ties first skip late units: the carry holds the items through the game,
+    while most top-cost units arrive only at the end. Remaining ties go to
+    more stars, then the higher cost.
     """
-    candidates = units[~units["character_id"].isin(tank_ids)].assign(
-        is_top_cost=lambda frame: frame["rarity"] == frame["rarity"].max()
-    )
+    candidates = units.assign(is_late=is_late_unit(units, rules))
+    candidates = candidates[~candidates["character_id"].isin(rules.non_carry_ids)]
     carries = (
         candidates.sort_values(
-            ["item_count", "is_top_cost", "star_level", "rarity"],
+            ["item_count", "is_late", "star_level", "rarity"],
             ascending=[False, True, False, False],
         )
         .groupby("participant_id")
@@ -72,11 +97,11 @@ def assign_comps(
     participants: pd.DataFrame,
     traits: pd.DataFrame,
     units: pd.DataFrame,
-    tank_ids: set[str],
+    rules: CarryRules,
 ) -> pd.DataFrame:
     """Add main_trait, carry and comp columns; comp is empty if either is missing."""
     boards = participants.join(find_main_traits(traits), on="participant_id")
-    boards = boards.join(find_carries(units, tank_ids), on="participant_id")
+    boards = boards.join(find_carries(units, rules), on="participant_id")
     boards["comp"] = boards["main_trait"] + " + " + boards["carry"]
     return boards
 
@@ -99,15 +124,22 @@ def overlap(first: set[str], second: set[str]) -> float:
     return len(first & second) / min(len(first), len(second))
 
 
-def is_same_comp(first: set[str], second: set[str]) -> bool:
-    """Return True if two core unit sets are big enough and overlap enough."""
-    if min(len(first), len(second)) < MIN_CORE_UNITS:
+def is_same_comp(first_core: set[str], second_core: set[str], first_carry: str, second_carry: str) -> bool:
+    """Return True if two groups are one comp.
+
+    Either each group's carry is a core unit of the other (e.g. Azir and Zyra
+    both played in each other's boards), or their core units, if big enough,
+    overlap enough.
+    """
+    if first_carry in second_core and second_carry in first_core:
+        return True
+    if min(len(first_core), len(second_core)) < MIN_CORE_UNITS:
         return False
-    return overlap(first, second) >= MERGE_SIMILARITY
+    return overlap(first_core, second_core) >= MERGE_SIMILARITY
 
 
 def merge_similar_comps(boards: pd.DataFrame, units: pd.DataFrame) -> pd.DataFrame:
-    """Merge groups with the same main trait whose core units mostly overlap.
+    """Merge groups with the same main trait that is_same_comp finds to be one comp.
 
     Each group is compared with the leader (most played group) of every comp
     found so far, never with other members, so unrelated groups cannot be
@@ -117,13 +149,18 @@ def merge_similar_comps(boards: pd.DataFrame, units: pd.DataFrame) -> pd.DataFra
     big_groups = games[games >= MIN_GROUP_GAMES].index
     core = find_core_units(boards[boards["comp"].isin(big_groups)], units)
     main_trait = boards.groupby("comp")["main_trait"].first()
+    carry = boards.groupby("comp")["carry"].first()
 
     renames = {}
     leaders: dict[str, list[str]] = {}
     for group in big_groups:  # value_counts order: most played first
         trait_leaders = leaders.setdefault(main_trait[group], [])
         leader = next(
-            (l for l in trait_leaders if is_same_comp(core[group], core[l])),
+            (
+                l
+                for l in trait_leaders
+                if is_same_comp(core[group], core[l], carry[group], carry[l])
+            ),
             None,
         )
         if leader is None:
@@ -156,17 +193,25 @@ def name_comps(boards: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize_comps(boards: pd.DataFrame) -> pd.DataFrame:
-    """Return games, average placement, top 4 rate and win rate per comp."""
+    """Return games, average placement, top 4 rate, win rate and tier per comp."""
     boards = boards.assign(
         top4=boards["placement"] <= 4,
         win=boards["placement"] == 1,
     )
-    return boards.groupby("comp").agg(
+    summary = boards.groupby("comp").agg(
         games=("placement", "size"),
         avg_placement=("placement", "mean"),
         top4_rate=("top4", "mean"),
         win_rate=("win", "mean"),
     )
+    # right=False: 4.0 itself is A, not S
+    summary["tier"] = pd.cut(
+        summary["avg_placement"],
+        bins=[0, *TIER_LIMITS, 9],
+        labels=TIERS,
+        right=False,
+    )
+    return summary
 
 
 def find_typical_board(
@@ -196,5 +241,5 @@ def load_boards(repository: MatchRepository, set_number: int, queue_id: int) -> 
         repository.load_active_traits(set_number, queue_id), columns=TRAIT_COLUMNS
     )
     units = pd.DataFrame(repository.load_units(set_number, queue_id), columns=UNIT_COLUMNS)
-    boards = assign_comps(participants, traits, units, load_tank_ids(set_number))
+    boards = assign_comps(participants, traits, units, load_carry_rules(set_number))
     return name_comps(merge_similar_comps(boards, units))

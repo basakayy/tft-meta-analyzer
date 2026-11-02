@@ -1,75 +1,75 @@
-character_id,name,cost,role,slots
-DA_18_Akali_AD,Akali,1,Magic Fighter,1
-DA_18_Camille,Camille,1,Attack Fighter,1
-DA_Cinderling18,Cinderling,1,Attack Caster,1
-DA_Karma18,Karma,1,Magic Caster,1
-DA_18_Kobuko,Kobuko,1,Magic Tank,1
-DA_18_Leona,Leona,1,Magic Tank,1
-DA_18_Ornn,Ornn,1,Magic Tank,1
-DA_18_Sentry,Pebbles,1,Magic Caster,1
-DA_18_Rakan,Rakan,1,Magic Tank,1
-DA_18_RekSai,Rek'Sai,1,Magic Tank,1
-DA_18_Varus,Varus,1,Attack Caster,1
-DA_18_Veigar,Veigar,1,Magic Caster,1
-DA_18_Xayah,Xayah,1,Attack Marksman,1
-DA_18_Yorick,Yorick,1,Attack Tank,1
-DA_18_Alistar,Alistar,2,Magic Tank,1
-DA_18_Caitlyn,Caitlyn,2,Attack Specialist,1
-DA_18_Elise,Elise,2,Magic Tank,1
-DA_Gromp18_AP,Gromp,2,Magic Caster,1
-DA_18_Kayle,Kayle,2,Magic Specialist,1
-DA_18_LeBlanc,LeBlanc,2,Magic Caster,1
-DA_Murkwolf18,Murkwolf,2,Attack Assassin,1
-DA_Scuttlecrab18,Scuttlecrab,2,Attack Tank,1
-DA_18_Sejuani,Sejuani,2,Magic Tank,1
-DA_18_Shen,Shen,2,Magic Tank,1
-DA_18_Teemo,Teemo,2,Magic Caster,1
-DA_18_Warwick,Warwick,2,Attack Fighter,1
-DA_18_Yunara,Yunara,2,Attack Caster,1
-DA_18_Azir,Azir,3,Magic Marksman,1
-DA_18_Cassiopeia,Cassiopeia,3,Magic Caster,1
-DA_18_Diana,Diana,3,Magic Fighter,1
-DA_Fiddlesticks18,Fiddlesticks,3,Magic Tank,1
-DA_18_Hecarim,Hecarim,3,Magic Tank,1
-DA_18_KhaZix,Kha'Zix,3,Magic Assassin,1
-DA_KogMaw18_AD,Kog'Maw,3,Magic Caster,1
-DA_Krug18,Krug,3,Attack Tank,1
-DA_CrimsonRaptor18,Mama Beak,3,Attack Marksman,1
-DA_18_MasterYi_AD,Master Yi,3,Magic Specialist,1
-DA_18_Rammus,Rammus,3,Attack Tank,1
-DA_18_Rengar,Rengar,3,Attack Fighter,1
-DA_18_Tristana,Tristana,3,Attack Marksman,1
-DA_Vi18,Vi,3,Attack Tank,1
-DA_18_Ahri,Ahri,4,Magic Caster,1
-DA_Amumu18,Amumu,4,Magic Tank,1
-DA_18_Aphelios,Aphelios,4,Attack Marksman,1
-DA_Brambleback18,Brambleback,4,Attack Fighter,1
-DA_18_Ezreal,Ezreal,4,Attack Caster,1
-DA_18_Lillia,Lillia,4,Magic Tank,1
-DA_18_Malphite,Malphite,4,Magic Tank,1
-DA_18_Morgana,Morgana,4,Magic Fighter,1
-DA_Nidalee18_AP,Nidalee,4,Magic Marksman,1
-DA_Sentinel18,Sentinel,4,Magic Tank,1
-DA_18_Sett,Sett,4,Attack Tank,1
-DA_18_Sivir,Sivir,4,Attack Caster,1
-DA_18_Soraka,Soraka,4,Magic Caster,1
-DA_18_Zyra,Zyra,4,Magic Caster,1
-DA_18_Alune,Alune,5,Magic Caster,1
-DA_18_Ashe,Ashe,5,Attack Caster,1
-DA_Draven18,Draven,5,Attack Marksman,1
-DA_18_ElderDragon,Elder Dragon,5,Attack Fighter,2
-DA_18_GnarSmall,Gnar,5,Attack Specialist,1
-DA_18_Ivern,Ivern,5,Magic Caster,1
-DA_18_Kennen,Kennen,5,Magic Assassin,1
-DA_Lux18_Base,Lux,5,Magic Caster,1
-DA_Lux18_Blackthorn,Lux (Blackthorn),5,Magic Caster,1
-DA_Lux18_Blossom,Lux (Blossom),5,Magic Caster,1
-DA_18_Lux_Coven,Lux (Coven),5,Magic Caster,1
-DA_18_Lux_Elderwood,Lux (Elderwood),5,Magic Caster,1
-DA_18_Lux_Fae,Lux (Fae),5,Magic Caster,1
-DA_18_Lux_Inferno,Lux (Inferno),5,Magic Caster,1
-DA_18_Lux_Moonbeam,Lux (Lunar),5,Magic Caster,1
-DA_18_Lux_Primal,Lux (Primal),5,Magic Caster,1
-DA_18_Lux_Sunbeam,Lux (Solar),5,Magic Caster,1
-DA_18_Maokai,Maokai,5,Magic Tank,1
-DA_Taric18,Taric,5,Magic Tank,1
+character_id,name,cost,role,slots,side_carry,top_cost_carry
+DA_18_Akali_AD,Akali,1,Magic Fighter,1,0,0
+DA_18_Camille,Camille,1,Attack Fighter,1,0,0
+DA_Cinderling18,Cinderling,1,Attack Caster,1,0,0
+DA_Karma18,Karma,1,Magic Caster,1,0,0
+DA_18_Kobuko,Kobuko,1,Magic Tank,1,0,0
+DA_18_Leona,Leona,1,Magic Tank,1,0,0
+DA_18_Ornn,Ornn,1,Magic Tank,1,0,0
+DA_18_Sentry,Pebbles,1,Magic Caster,1,0,0
+DA_18_Rakan,Rakan,1,Magic Tank,1,0,0
+DA_18_RekSai,Rek'Sai,1,Magic Tank,1,0,0
+DA_18_Varus,Varus,1,Attack Caster,1,0,0
+DA_18_Veigar,Veigar,1,Magic Caster,1,0,0
+DA_18_Xayah,Xayah,1,Attack Marksman,1,0,0
+DA_18_Yorick,Yorick,1,Attack Tank,1,0,0
+DA_18_Alistar,Alistar,2,Magic Tank,1,0,0
+DA_18_Caitlyn,Caitlyn,2,Attack Specialist,1,0,0
+DA_18_Elise,Elise,2,Magic Tank,1,0,0
+DA_Gromp18_AP,Gromp,2,Magic Caster,1,0,0
+DA_18_Kayle,Kayle,2,Magic Specialist,1,0,0
+DA_18_LeBlanc,LeBlanc,2,Magic Caster,1,0,0
+DA_Murkwolf18,Murkwolf,2,Attack Assassin,1,0,0
+DA_Scuttlecrab18,Scuttlecrab,2,Attack Tank,1,0,0
+DA_18_Sejuani,Sejuani,2,Magic Tank,1,0,0
+DA_18_Shen,Shen,2,Magic Tank,1,0,0
+DA_18_Teemo,Teemo,2,Magic Caster,1,0,0
+DA_18_Warwick,Warwick,2,Attack Fighter,1,0,0
+DA_18_Yunara,Yunara,2,Attack Caster,1,0,0
+DA_18_Azir,Azir,3,Magic Marksman,1,0,0
+DA_18_Cassiopeia,Cassiopeia,3,Magic Caster,1,0,0
+DA_18_Diana,Diana,3,Magic Fighter,1,0,0
+DA_Fiddlesticks18,Fiddlesticks,3,Magic Tank,1,0,0
+DA_18_Hecarim,Hecarim,3,Magic Tank,1,0,0
+DA_18_KhaZix,Kha'Zix,3,Magic Assassin,1,0,0
+DA_KogMaw18_AD,Kog'Maw,3,Magic Caster,1,0,0
+DA_Krug18,Krug,3,Attack Tank,1,0,0
+DA_CrimsonRaptor18,Mama Beak,3,Attack Marksman,1,0,0
+DA_18_MasterYi_AD,Master Yi,3,Magic Specialist,1,0,0
+DA_18_Rammus,Rammus,3,Attack Tank,1,0,0
+DA_18_Rengar,Rengar,3,Attack Fighter,1,0,0
+DA_18_Tristana,Tristana,3,Attack Marksman,1,0,0
+DA_Vi18,Vi,3,Attack Tank,1,0,0
+DA_18_Ahri,Ahri,4,Magic Caster,1,0,0
+DA_Amumu18,Amumu,4,Magic Tank,1,0,0
+DA_18_Aphelios,Aphelios,4,Attack Marksman,1,0,0
+DA_Brambleback18,Brambleback,4,Attack Fighter,1,0,0
+DA_18_Ezreal,Ezreal,4,Attack Caster,1,0,0
+DA_18_Lillia,Lillia,4,Magic Tank,1,0,0
+DA_18_Malphite,Malphite,4,Magic Tank,1,0,0
+DA_18_Morgana,Morgana,4,Magic Fighter,1,0,0
+DA_Nidalee18_AP,Nidalee,4,Magic Marksman,1,0,0
+DA_Sentinel18,Sentinel,4,Magic Tank,1,0,0
+DA_18_Sett,Sett,4,Attack Tank,1,0,0
+DA_18_Sivir,Sivir,4,Attack Caster,1,0,0
+DA_18_Soraka,Soraka,4,Magic Caster,1,1,0
+DA_18_Zyra,Zyra,4,Magic Caster,1,0,0
+DA_18_Alune,Alune,5,Magic Caster,1,0,0
+DA_18_Ashe,Ashe,5,Attack Caster,1,0,0
+DA_Draven18,Draven,5,Attack Marksman,1,0,1
+DA_18_ElderDragon,Elder Dragon,5,Attack Fighter,2,0,0
+DA_18_GnarSmall,Gnar,5,Attack Specialist,1,0,0
+DA_18_Ivern,Ivern,5,Magic Caster,1,0,0
+DA_18_Kennen,Kennen,5,Magic Assassin,1,0,0
+DA_Lux18_Base,Lux,5,Magic Caster,1,0,0
+DA_Lux18_Blackthorn,Lux (Blackthorn),5,Magic Caster,1,0,0
+DA_Lux18_Blossom,Lux (Blossom),5,Magic Caster,1,0,0
+DA_18_Lux_Coven,Lux (Coven),5,Magic Caster,1,0,0
+DA_18_Lux_Elderwood,Lux (Elderwood),5,Magic Caster,1,0,0
+DA_18_Lux_Fae,Lux (Fae),5,Magic Caster,1,0,0
+DA_18_Lux_Inferno,Lux (Inferno),5,Magic Caster,1,0,0
+DA_18_Lux_Moonbeam,Lux (Lunar),5,Magic Caster,1,0,0
+DA_18_Lux_Primal,Lux (Primal),5,Magic Caster,1,0,0
+DA_18_Lux_Sunbeam,Lux (Solar),5,Magic Caster,1,0,0
+DA_18_Maokai,Maokai,5,Magic Tank,1,0,0
+DA_Taric18,Taric,5,Magic Tank,1,0,0

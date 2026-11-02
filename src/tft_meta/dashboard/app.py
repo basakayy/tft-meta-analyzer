@@ -91,7 +91,7 @@ st.caption(
 def comp_label(comp: str, stats: pd.Series) -> str:
     """Comp name followed by its statistics, shown on the collapsed row."""
     return (
-        f"**{comp_name(comp, unit_names)}** · "
+        f"**{stats['tier']}** · **{comp_name(comp, unit_names)}** · "
         f"Avg place {stats['avg_placement']:.2f} · "
         f"Top 4 {stats['top4_rate']:.0%} · "
         f"Win {stats['win_rate']:.0%} · "
