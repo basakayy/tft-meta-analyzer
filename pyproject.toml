@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+# Lets tests import tft_meta without setting PYTHONPATH
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,5 +1,7 @@
 # TFT Meta Analyzer
 
+[![tests](https://github.com/basakayy/tft-meta-analyzer/actions/workflows/tests.yml/badge.svg)](https://github.com/basakayy/tft-meta-analyzer/actions/workflows/tests.yml)
+
 **Live dashboard: https://tft-meta-analyzer.streamlit.app/**
 
 A data pipeline that collects top-ranked Teamfight Tactics games from the Riot Games API, stores them in PostgreSQL, groups thousands of player boards into strategies with pandas, and shows which strategies and items perform best in a Streamlit dashboard.
@@ -87,21 +89,52 @@ Each group is compared only with the leader of an existing comp, so unrelated gr
 
 ## Run it yourself
 
-The dashboard only needs the snapshot that is already in the repository:
+Requires Python 3.11 or newer. The dashboard only needs the snapshot that is already in the repository.
+
+**Linux / macOS**
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run src/tft_meta/dashboard/app.py
+```
+
+**Windows (PowerShell)**
+
+```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m streamlit run src/tft_meta/dashboard/app.py
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+streamlit run src/tft_meta/dashboard/app.py
 ```
 
-To collect new data you also need a PostgreSQL database and a Riot API key. Create a `.env` file in the project root with `RIOT_API_KEY` and `DATABASE_URL`, then:
+To collect new data you also need a PostgreSQL database and a Riot API key. Create a `.env` file in the project root with `RIOT_API_KEY` and `DATABASE_URL`, then, with the virtual environment active:
 
 ```bash
-$env:PYTHONPATH = "src"
-.venv\Scripts\python.exe -m tft_meta.collector.pipeline --max-players 200 --matches-per-player 20
-.venv\Scripts\python.exe -m tft_meta.storage.snapshot
+# Linux / macOS
+export PYTHONPATH=src
+python -m tft_meta.collector.pipeline --max-players 200 --matches-per-player 20
+python -m tft_meta.storage.snapshot
 ```
+
+```powershell
+# Windows (PowerShell)
+$env:PYTHONPATH = "src"
+python -m tft_meta.collector.pipeline --max-players 200 --matches-per-player 20
+python -m tft_meta.storage.snapshot
+```
+
+### Tests
+
+The tests need no database and no API key; GitHub Actions runs them on every push.
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+They cover the rate limiter, the API response parser, the API client's retry rules (with a fake HTTP session), and the analysis rules: main trait and carry selection, comp merging, tiers, typical boards and item place change.
 
 The dashboard reloads its data when the snapshot files change. After changing code in `analysis/` or `storage/`, restart Streamlit (or "Reboot app" on Streamlit Cloud), because Streamlit only reloads the main script.
 
@@ -109,9 +142,9 @@ The dashboard reloads its data when the snapshot files change. After changing co
 
 I built this project together with Claude (Anthropic) as a pair programmer in Claude Code:
 
-- **Where:** planning the folder structure and daily plan, explaining concepts I had not used before (rate limiting, transactions, pandas group operations), writing parts of the code with me, and writing tests in scratch scripts.
+- **Where:** planning the folder structure and daily plan, explaining concepts I had not used before (rate limiting, transactions, pandas group operations), writing parts of the code with me, and writing the pytest tests.
 - **How I stayed in control:** I filled in the key lines myself (for example the parser fields and the place change formula), and every analysis rule was checked against my own knowledge of the game. Several AI suggestions were rejected after I looked at the results: picking the cheapest unit as carry, ignoring emblems when counting items, and treating every emblem holder as the carry. Each of these produced comp names that a player would immediately see as wrong.
-- **How output was checked:** every rule was first tested on the real data in a separate script, comparing the comp names, counts and averages before and after, and only then moved into the code. The Riot queue id for ranked games was checked against Riot's official queue list rather than taken from memory.
+- **How output was checked:** every analysis rule was first tried on the real data in a throwaway script, comparing the comp names, counts and averages before and after, and only then moved into the code. The rules that were kept are covered by unit tests (`tests/`) that run in CI. The Riot queue id for ranked games was checked against Riot's official queue list rather than taken from memory.
 
 ## What I learned
 
