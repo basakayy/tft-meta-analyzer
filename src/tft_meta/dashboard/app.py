@@ -19,7 +19,7 @@ from tft_meta.analysis.comps import (  # noqa: E402
     summarize_comps,
 )
 from tft_meta.analysis.items import item_name, summarize_unit_items  # noqa: E402
-from tft_meta.storage.snapshot import load_snapshot  # noqa: E402
+from tft_meta.storage.snapshot import load_snapshot, snapshot_version  # noqa: E402
 
 SET_NUMBER = 18
 LEVELS = (8, 9, 10)
@@ -28,11 +28,12 @@ MIN_LEVEL_BOARDS = 20
 
 
 @st.cache_data
-def load_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_data(version: float) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load the snapshot and group boards into comps once; Streamlit caches the result.
 
     The snapshot is exported from the database (python -m tft_meta.storage.snapshot),
-    so the dashboard runs without a database, e.g. on Streamlit Cloud.
+    so the dashboard runs without a database, e.g. on Streamlit Cloud. `version`
+    is only used by the cache: a new snapshot gives a new version and a reload.
     """
     tables = load_snapshot(SET_NUMBER)
     boards = build_boards(tables["participants"], tables["traits"], tables["units"], SET_NUMBER)
@@ -59,7 +60,7 @@ def comp_name(comp: str, unit_names: pd.Series) -> str:
 st.set_page_config(page_title="TFT Meta Analyzer", layout="wide")
 st.title("TFT Meta Analyzer")
 
-all_boards, units, unit_items = load_data()
+all_boards, units, unit_items = load_data(snapshot_version(SET_NUMBER))
 boards = all_boards.dropna(subset=["comp"])
 unit_names = load_unit_names(SET_NUMBER)
 slots = load_unit_slots(SET_NUMBER)

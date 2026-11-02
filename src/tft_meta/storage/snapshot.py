@@ -49,10 +49,21 @@ def export_snapshot(repository: MatchRepository, set_number: int) -> None:
         print(f"{path.relative_to(PROJECT_ROOT)}: {len(frame)} rows")
 
 
+SNAPSHOT_TABLES = ("participants", "traits", "units", "unit_items")
+
+
 def load_snapshot(set_number: int) -> dict[str, pd.DataFrame]:
     """Read the tables written by export_snapshot."""
-    tables = ("participants", "traits", "units", "unit_items")
-    return {table: pd.read_csv(snapshot_path(set_number, table)) for table in tables}
+    return {table: pd.read_csv(snapshot_path(set_number, table)) for table in SNAPSHOT_TABLES}
+
+
+def snapshot_version(set_number: int) -> float:
+    """Return the latest modification time of the snapshot files.
+
+    It changes whenever the snapshot is exported or pulled again, so caches
+    keyed on it know when to reload.
+    """
+    return max(snapshot_path(set_number, table).stat().st_mtime for table in SNAPSHOT_TABLES)
 
 
 def main() -> None:
