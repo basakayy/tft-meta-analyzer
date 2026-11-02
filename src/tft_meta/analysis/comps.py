@@ -241,5 +241,12 @@ def load_boards(repository: MatchRepository, set_number: int, queue_id: int) -> 
         repository.load_active_traits(set_number, queue_id), columns=TRAIT_COLUMNS
     )
     units = pd.DataFrame(repository.load_units(set_number, queue_id), columns=UNIT_COLUMNS)
+    return build_boards(participants, traits, units, set_number)
+
+
+def build_boards(
+    participants: pd.DataFrame, traits: pd.DataFrame, units: pd.DataFrame, set_number: int
+) -> pd.DataFrame:
+    """Return one row per player with their comp, from tables read from any source."""
     boards = assign_comps(participants, traits, units, load_carry_rules(set_number))
     return name_comps(merge_similar_comps(boards, units))

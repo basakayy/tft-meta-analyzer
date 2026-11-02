@@ -1,24 +1,27 @@
 """Streamlit dashboard: comp statistics, typical boards per level and carry items."""
 
 import re
+import sys
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from tft_meta.analysis.comps import (
+# `streamlit run` only puts this file's folder on the import path; add src/ so
+# that tft_meta can be imported without setting PYTHONPATH (e.g. on Streamlit Cloud)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from tft_meta.analysis.comps import (  # noqa: E402
     ROLES_DIR,
-    UNIT_COLUMNS,
+    build_boards,
     find_typical_board,
-    load_boards,
     load_unit_slots,
     summarize_comps,
 )
-from tft_meta.analysis.items import ITEM_COLUMNS, item_name, summarize_unit_items
-from tft_meta.config import load_settings
-from tft_meta.storage.repository import MatchRepository
+from tft_meta.analysis.items import item_name, summarize_unit_items  # noqa: E402
+from tft_meta.storage.snapshot import load_snapshot  # noqa: E402
 
 SET_NUMBER = 18
-RANKED_QUEUE_ID = 1100
 LEVELS = (8, 9, 10)
 # A level's typical board is only shown if the comp reached that level this often
 MIN_LEVEL_BOARDS = 20
@@ -26,19 +29,14 @@ MIN_LEVEL_BOARDS = 20
 
 @st.cache_data
 def load_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Load boards with their comps, units and items once; Streamlit caches the result."""
-    repository = MatchRepository(load_settings().database_url)
-    try:
-        boards = load_boards(repository, SET_NUMBER, RANKED_QUEUE_ID)
-        units = pd.DataFrame(
-            repository.load_units(SET_NUMBER, RANKED_QUEUE_ID), columns=UNIT_COLUMNS
-        )
-        unit_items = pd.DataFrame(
-            repository.load_unit_items(SET_NUMBER, RANKED_QUEUE_ID), columns=ITEM_COLUMNS
-        )
-    finally:
-        repository.close()
-    return boards, units, unit_items
+    """Load the snapshot and group boards into comps once; Streamlit caches the result.
+
+    The snapshot is exported from the database (python -m tft_meta.storage.snapshot),
+    so the dashboard runs without a database, e.g. on Streamlit Cloud.
+    """
+    tables = load_snapshot(SET_NUMBER)
+    boards = build_boards(tables["participants"], tables["traits"], tables["units"], SET_NUMBER)
+    return boards, tables["units"], tables["unit_items"]
 
 
 def load_unit_names(set_number: int) -> pd.Series:
