@@ -1,4 +1,4 @@
-"""Database access: all of the project's SQL for writing matches lives here."""
+"""Database access: all of the project's SQL lives here."""
 
 from pathlib import Path
 from typing import Any
@@ -32,6 +32,31 @@ class MatchRepository:
             "SELECT 1 FROM matches WHERE match_id = %s", (match_id,)
         ).fetchone()
         return row is not None
+
+    def load_participants(self, set_number: int, queue_id: int) -> list[tuple]:
+        """Return (participant_id, match_id, placement, level) for one set and queue."""
+        return self.connection.execute(
+            """
+            SELECT p.participant_id, p.match_id, p.placement, p.level
+            FROM participants p
+            JOIN matches m USING (match_id)
+            WHERE m.set_number = %s AND m.queue_id = %s
+            """,
+            (set_number, queue_id),
+        ).fetchall()
+
+    def load_active_traits(self, set_number: int, queue_id: int) -> list[tuple]:
+        """Return (participant_id, trait name, num_units) for active traits only."""
+        return self.connection.execute(
+            """
+            SELECT t.participant_id, t.name, t.num_units
+            FROM traits t
+            JOIN participants p USING (participant_id)
+            JOIN matches m USING (match_id)
+            WHERE m.set_number = %s AND m.queue_id = %s AND t.style > 0
+            """,
+            (set_number, queue_id),
+        ).fetchall()
 
     def save_match(self, match: dict[str, Any]) -> None:
         """Save a match and all its rows, or nothing if any step fails."""
