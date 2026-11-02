@@ -58,6 +58,22 @@ class MatchRepository:
             (set_number, queue_id),
         ).fetchall()
 
+    def load_units(self, set_number: int, queue_id: int) -> list[tuple]:
+        """Return (participant_id, character_id, star_level, rarity, item_count) per unit."""
+        return self.connection.execute(
+            """
+            SELECT u.participant_id, u.character_id, u.star_level, u.rarity,
+                   COUNT(i.item_id) AS item_count
+            FROM units u
+            JOIN participants p USING (participant_id)
+            JOIN matches m USING (match_id)
+            LEFT JOIN items i USING (unit_id)
+            WHERE m.set_number = %s AND m.queue_id = %s
+            GROUP BY u.unit_id
+            """,
+            (set_number, queue_id),
+        ).fetchall()
+
     def save_match(self, match: dict[str, Any]) -> None:
         """Save a match and all its rows, or nothing if any step fails."""
         with self.connection.transaction():
