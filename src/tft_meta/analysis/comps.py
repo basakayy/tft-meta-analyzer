@@ -16,8 +16,13 @@ UNIT_COLUMNS = ["participant_id", "character_id", "star_level", "rarity", "item_
 CORE_SHARE = 0.5
 # Groups with fewer games have unreliable core units and are not merged
 MIN_GROUP_GAMES = 20
-# Two groups are one comp if their core units overlap at least this much (Jaccard)
-MERGE_SIMILARITY = 0.7
+# Two groups are one comp if their core units overlap at least this much
+MERGE_SIMILARITY = 0.8
+# Smaller cores overlap too easily, so they are never merged
+MIN_CORE_UNITS = 4
+# A carry is named in the comp name if it carries at least this share of its boards
+NAME_SHARE = 0.3
+MAX_NAMED_CARRIES = 2
 
 
 def find_main_traits(traits: pd.DataFrame) -> pd.Series:
@@ -37,10 +42,20 @@ def load_tank_ids(set_number: int) -> set[str]:
 
 
 def find_carries(units: pd.DataFrame, tank_ids: set[str]) -> pd.Series:
-    """Return each player's carry: a non-tank with the most items, then stars, then cost."""
-    candidates = units[~units["character_id"].isin(tank_ids)]
+    """Return each player's carry: a non-tank with the most items.
+
+    Ties first skip the most expensive units: the carry holds the items through
+    the game, while top-cost units usually arrive only at the end. Remaining
+    ties go to more stars, then the higher cost.
+    """
+    candidates = units[~units["character_id"].isin(tank_ids)].assign(
+        is_top_cost=lambda frame: frame["rarity"] == frame["rarity"].max()
+    )
     carries = (
-        candidates.sort_values(["item_count", "star_level", "rarity"], ascending=False)
+        candidates.sort_values(
+            ["item_count", "is_top_cost", "star_level", "rarity"],
+            ascending=[False, True, False, False],
+        )
         .groupby("participant_id")
         .head(1)
     )
@@ -70,9 +85,19 @@ def find_core_units(boards: pd.DataFrame, units: pd.DataFrame) -> dict[str, set[
     return core.groupby("comp")["character_id"].agg(set).to_dict()
 
 
-def jaccard(first: set[str], second: set[str]) -> float:
-    """Shared units divided by all distinct units of both sets."""
-    return len(first & second) / len(first | second)
+def overlap(first: set[str], second: set[str]) -> float:
+    """Shared units divided by the size of the smaller set.
+
+    Unlike Jaccard, a comp that only adds a few units to another still scores high.
+    """
+    return len(first & second) / min(len(first), len(second))
+
+
+def is_same_comp(first: set[str], second: set[str]) -> bool:
+    """Return True if two core unit sets are big enough and overlap enough."""
+    if min(len(first), len(second)) < MIN_CORE_UNITS:
+        return False
+    return overlap(first, second) >= MERGE_SIMILARITY
 
 
 def merge_similar_comps(boards: pd.DataFrame, units: pd.DataFrame) -> pd.DataFrame:
@@ -92,7 +117,7 @@ def merge_similar_comps(boards: pd.DataFrame, units: pd.DataFrame) -> pd.DataFra
     for group in big_groups:  # value_counts order: most played first
         trait_leaders = leaders.setdefault(main_trait[group], [])
         leader = next(
-            (l for l in trait_leaders if jaccard(core[group], core[l]) >= MERGE_SIMILARITY),
+            (l for l in trait_leaders if is_same_comp(core[group], core[l])),
             None,
         )
         if leader is None:
@@ -106,6 +131,38 @@ def merge_similar_comps(boards: pd.DataFrame, units: pd.DataFrame) -> pd.DataFra
     return boards
 
 
+def name_comps(boards: pd.DataFrame) -> pd.DataFrame:
+    """Rename each comp to its main trait plus its most common carries.
+
+    A merged comp can have two clear carries (e.g. Ezreal and Aphelios), so
+    every carry with at least NAME_SHARE of the boards is named, up to
+    MAX_NAMED_CARRIES. If none reaches the share, the most common one is used.
+    """
+    shares = boards.groupby("comp")["carry"].value_counts(normalize=True)
+    main_trait = boards.groupby("comp")["main_trait"].first()
+    names = {}
+    for comp, comp_shares in shares.groupby(level="comp"):
+        top = comp_shares.head(MAX_NAMED_CARRIES)  # value_counts order: largest first
+        carries = [carry for (_, carry), share in top.items() if share >= NAME_SHARE]
+        carries = carries or [top.index[0][1]]
+        names[comp] = main_trait[comp] + " + " + " & ".join(carries)
+    return boards.assign(comp=boards["comp"].replace(names))
+
+
+def summarize_comps(boards: pd.DataFrame) -> pd.DataFrame:
+    """Return games, average placement, top 4 rate and win rate per comp."""
+    boards = boards.assign(
+        top4=boards["placement"] <= 4,
+        win=boards["placement"] == 1,
+    )
+    return boards.groupby("comp").agg(
+        games=("placement", "size"),
+        avg_placement=("placement", "mean"),
+        top4_rate=("top4", "mean"),
+        win_rate=("win", "mean"),
+    )
+
+
 def load_boards(repository: MatchRepository, set_number: int, queue_id: int) -> pd.DataFrame:
     """Return one row per player with their placement, level and comp."""
     participants = pd.DataFrame(
@@ -116,4 +173,4 @@ def load_boards(repository: MatchRepository, set_number: int, queue_id: int) -> 
     )
     units = pd.DataFrame(repository.load_units(set_number, queue_id), columns=UNIT_COLUMNS)
     boards = assign_comps(participants, traits, units, load_tank_ids(set_number))
-    return merge_similar_comps(boards, units)
+    return name_comps(merge_similar_comps(boards, units))
